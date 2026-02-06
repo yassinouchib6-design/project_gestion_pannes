@@ -14,17 +14,15 @@
 
 <body class="font-sans antialiased bg-gray-100 text-gray-900">
 <div class="min-h-screen">
-
     @include('layouts.navigation')
 
-    <main class="min-h-screen">
+    <main class="min-h-[calc(100vh-64px)]">
         {{ $slot }}
     </main>
 
-    <footer class="border-t bg-white/60 py-4 text-center text-sm text-gray-500">
+    <footer class="border-t bg-white/70 py-4 text-center text-sm text-gray-500">
         ©️ {{ date('Y') }} Ministère des Finances — Gestion des pannes
     </footer>
-
 </div>
 </body>
 </html>

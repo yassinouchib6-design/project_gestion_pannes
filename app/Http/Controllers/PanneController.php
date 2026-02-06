@@ -85,18 +85,15 @@ class PanneController extends Controller
             'priorite'      => 'required|in:low,medium,high',
             'type_panne'    => 'nullable|string|max:255',
 
-            // ✅ admin/technicien يقدرو يبدلو statut
             'statut'        => ($role === 'utilisateur') ? 'nullable' : 'nullable|in:nouvelle,en_cours,resolue',
         ]);
 
-        // ✅ utilisateur ما يبدّلش statut
         if ($role === 'utilisateur') {
             unset($data['statut']);
         }
 
         $panne->update($data);
 
-        // ✅ كيوديك للـ dashboard مباشرة كما طلبتي
         return redirect()->route('dashboard')->with('success', 'Panne modifiée avec succès');
     }
 
@@ -114,7 +111,6 @@ class PanneController extends Controller
         $user = auth()->user();
         $role = $user->role ?? 'utilisateur';
 
-        // utilisateur: غير ديالو
         if ($role === 'utilisateur' && $panne->utilisateur_id !== $user->id) {
             abort(403);
         }
