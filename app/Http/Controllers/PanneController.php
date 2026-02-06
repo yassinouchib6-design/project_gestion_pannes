@@ -53,13 +53,17 @@ class PanneController extends Controller
     }
 
     public function show(Panne $panne)
-    {
-        $this->authorizePanne($panne);
+{
+    $this->authorizePanne($panne);
 
-        $panne->load(['equipement', 'utilisateur']);
+    $panne->load([
+        'equipement',
+        'utilisateur',
+        'interventions' // ✅ مهم
+    ]);
 
-        return view('pannes.show', compact('panne'));
-    }
+    return view('pannes.show', compact('panne'));
+}
 
     public function edit(Panne $panne)
     {

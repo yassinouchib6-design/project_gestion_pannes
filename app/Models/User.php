@@ -13,12 +13,25 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    // إذا عندك role ف users table خليها
-    // protected $fillable = [...];
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     public function pannes()
     {
-        // FK ف جدول pannes هو utilisateur_id
         return $this->hasMany(Panne::class, 'utilisateur_id');
+    }
+
+    public function interventions()
+    {
+        return $this->hasMany(\App\Models\Intervention::class, 'technicien_id');
     }
 }

@@ -4,6 +4,7 @@
 
             @php
                 $role = auth()->user()->role ?? 'utilisateur';
+                $isStaff = in_array($role, ['admin','technicien']);
                 $canEdit = ($role !== 'utilisateur') || ($panne->utilisateur_id === auth()->id());
 
                 $st = $panne->statut ?? 'nouvelle';
@@ -63,6 +64,7 @@
                 </div>
             @endif
 
+            {{-- Infos panne --}}
             <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div class="rounded-xl bg-gray-50 p-4">
@@ -92,6 +94,69 @@
                         {{ $panne->description ?? '—' }}
                     </div>
                 </div>
+            </div>
+
+            {{-- ✅ Interventions --}}
+            <div class="mt-8 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+                <div class="p-6 flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Interventions</h2>
+                        <p class="text-sm text-gray-500">التدخلات المرتبطة بهاد panne.</p>
+                    </div>
+
+                    @if($isStaff)
+                        <a href="{{ route('interventions.create', ['panne_id' => $panne->id]) }}"
+                           class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                            + Ajouter
+                        </a>
+                    @endif
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600">
+                            <tr class="text-left">
+                                <th class="px-6 py-3 font-semibold">Date</th>
+                                <th class="px-6 py-3 font-semibold">Description</th>
+                                <th class="px-6 py-3 font-semibold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($panne->interventions ?? [] as $i)
+                                @php
+                                    $stI = $i->statut ?? '---';
+                                    $stIBadge = match($stI) {
+                                        'planifiee' => 'bg-amber-100 text-amber-700',
+                                        'en_cours'  => 'bg-blue-100 text-blue-700',
+                                        'terminee'  => 'bg-green-100 text-green-700',
+                                        default     => 'bg-gray-100 text-gray-700',
+                                    };
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-gray-700">
+                                        {{ $i->date_intervention ?? ($i->created_at?->format('Y-m-d') ?? '-') }}
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-700">
+                                        {{ $i->description ?? '-' }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {{ $stIBadge }}">
+                                            {{ str_replace('_',' ', ucfirst($stI)) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500">
+                                        ماكاين حتى intervention دابا.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-4"></div>
             </div>
 
         </div>
