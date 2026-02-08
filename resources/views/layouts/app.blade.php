@@ -20,7 +20,7 @@
         {{ $slot }}
     </main>
 
-    <footer class="border-t bg-white/70 py-4 text-center text-sm text-gray-500">
+    <footer class="border-t bg-white py-4 text-center text-sm text-gray-500">
         ©️ {{ date('Y') }} Ministère des Finances — Gestion des pannes
     </footer>
 </div>

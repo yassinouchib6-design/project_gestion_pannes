@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Equipement;
+use App\Models\User;
+use App\Models\Intervention;
 
 class Panne extends Model
 {
@@ -28,8 +31,9 @@ class Panne extends Model
         return $this->belongsTo(User::class, 'utilisateur_id');
     }
 
+    // ✅ relation الصحيحة مع interventions
     public function interventions()
     {
-        return $this->hasMany(Intervention::class);
+        return $this->hasMany(Intervention::class, 'panne_id');
     }
 }

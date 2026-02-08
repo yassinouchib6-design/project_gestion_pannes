@@ -19,7 +19,7 @@ class Intervention extends Model
 
     public function panne()
     {
-        return $this->belongsTo(\App\Models\Panne::class);
+        return $this->belongsTo(\App\Models\Panne::class, 'panne_id');
     }
 
     public function technicien()

@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="border-b border-gray-200 bg-white/80 backdrop-blur">
+<nav x-data="{ open: false, userMenu: false }" class="border-b border-gray-200 bg-white/80 backdrop-blur">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
 
@@ -23,7 +23,6 @@
 
                 {{-- Links (Desktop) --}}
                 <div class="hidden md:flex items-center gap-2">
-
                     <a href="{{ route('dashboard') }}"
                        class="px-3 py-2 rounded-lg text-sm font-semibold
                        {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
@@ -60,51 +59,80 @@
                     {{ $role }}
                 </span>
 
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700">
-                                {{ strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}
-                            </span>
-                            <span>{{ Auth::user()->name }}</span>
-                            <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </x-slot>
+                {{-- ✅ Custom dropdown (fix transparency/z-index issue) --}}
+                <div class="relative" x-data>
+                    <button
+                        type="button"
+                        @click="userMenu = !userMenu"
+                        @keydown.escape.window="userMenu = false"
+                        class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700">
+                            {{ strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}
+                        </span>
+                        <span>{{ Auth::user()->name }}</span>
+                        <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
 
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            Profile
-                        </x-dropdown-link>
+                    {{-- Backdrop click --}}
+                    <div x-show="userMenu" x-cloak @click="userMenu = false" class="fixed inset-0 z-40"></div>
 
-                        <x-dropdown-link :href="route('pannes.index')">
-                            Mes pannes
-                        </x-dropdown-link>
+                    {{-- Menu --}}
+                    <div
+                        x-show="userMenu"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-120"
+                        x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                        x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                        class="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-50 overflow-hidden"
+                    >
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <div class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</div>
+                            <div class="text-xs text-gray-500">{{ Auth::user()->email }}</div>
+                        </div>
 
-                        @if($isStaff)
-                            <x-dropdown-link :href="route('interventions.index')">
-                                Interventions
-                            </x-dropdown-link>
-                        @endif
+                        <div class="py-1">
+                            <a href="{{ route('profile.edit') }}"
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                Profile
+                            </a>
 
-                        @if($isAdmin)
-                            <x-dropdown-link :href="route('techniciens.index')">
-                                Techniciens
-                            </x-dropdown-link>
-                        @endif
+                            <a href="{{ route('pannes.index') }}"
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                Mes pannes
+                            </a>
 
-                        <div class="my-1 border-t border-gray-100"></div>
+                            @if($isStaff)
+                                <a href="{{ route('interventions.index') }}"
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    Interventions
+                                </a>
+                            @endif
 
-                        <form method="POST" action="{{ route('logout') }}">
+                            @if($isAdmin)
+                                <a href="{{ route('techniciens.index') }}"
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    Techniciens
+                                </a>
+                            @endif
+                        </div>
+
+                        <div class="border-t border-gray-100"></div>
+
+                        <form method="POST" action="{{ route('logout') }}" class="py-1">
                             @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault(); this.closest('form').submit();">
+                            <button type="submit"
+                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                 Log Out
-                            </x-dropdown-link>
+                            </button>
                         </form>
-                    </x-slot>
-                </x-dropdown>
+                    </div>
+                </div>
             </div>
 
             {{-- Hamburger (Mobile) --}}
@@ -121,7 +149,7 @@
     </div>
 
     {{-- Mobile menu --}}
-    <div x-show="open" class="md:hidden border-t border-gray-200 bg-white">
+    <div x-show="open" x-cloak class="md:hidden border-t border-gray-200 bg-white">
         <div class="px-4 py-3 space-y-1">
             <a href="{{ route('dashboard') }}"
                class="block rounded-lg px-3 py-2 text-sm font-semibold {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">

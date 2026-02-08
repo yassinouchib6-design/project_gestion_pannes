@@ -10,66 +10,83 @@ use Illuminate\Http\Request;
 class InterventionController extends Controller
 {
     public function index()
-{
-    $user = auth()->user();
-    $role = $user->role ?? 'utilisateur';
+    {
+        $user = auth()->user();
+        $role = $user->role ?? 'utilisateur';
 
-    $query = Intervention::with(['panne.equipement', 'technicien'])->latest();
+        $query = Intervention::with(['panne.equipement', 'technicien'])->latest();
 
-    // technicien يشوف غير interventions ديالو
-    if ($role === 'technicien') {
-        $query->where('technicien_id', $user->id);
+        // technicien يشوف غير interventions ديالو
+        if ($role === 'technicien') {
+            $query->where('technicien_id', $user->id);
+        }
+
+        $interventions = $query->paginate(10);
+
+        return view('interventions.index', compact('interventions'));
     }
-
-    $interventions = $query->paginate(10);
-
-    return view('interventions.index', compact('interventions'));
-}
 
     public function create(Request $request)
-{
-    $pannes = Panne::with('equipement')->latest()->get();
+    {
+        $user = auth()->user();
+        $role = $user->role ?? 'technicien';
 
-    $techniciens = User::where('role', 'technicien')->orderBy('name')->get();
+        // admin: يشوف جميع pannes
+        // technicien: يشوف غير nouvelle/en_cours (باش يخدم عليهم)
+        $pannesQuery = Panne::with('equipement')->latest();
 
-    $selectedPanneId = $request->query('panne_id');
+        if ($role === 'technicien') {
+            $pannesQuery->whereIn('statut', ['nouvelle', 'en_cours']);
+        }
 
-    return view('interventions.create', compact('pannes', 'techniciens', 'selectedPanneId'));
-}
+        $pannes = $pannesQuery->get();
+
+        $techniciens = ($role === 'admin')
+            ? User::where('role', 'technicien')->orderBy('name')->get()
+            : collect();
+
+        $selectedPanneId = $request->query('panne_id');
+
+        return view('interventions.create', compact('pannes', 'techniciens', 'selectedPanneId', 'role'));
+    }
 
     public function store(Request $request)
-{
-    $user = auth()->user();
-    $role = $user->role ?? 'technicien';
+    {
+        $user = auth()->user();
+        $role = $user->role ?? 'technicien';
 
-    $data = $request->validate([
-        'panne_id'          => 'required|exists:pannes,id',
-        'date_intervention' => 'nullable|date',
-        'description'       => 'nullable|string',
-        'statut_apres'      => 'nullable|in:nouvelle,en_cours,resolue',
+        $rules = [
+            'panne_id'          => 'required|exists:pannes,id',
+            'date_intervention' => 'nullable|date',
+            'description'       => 'nullable|string',
+            'statut_apres'      => 'nullable|in:nouvelle,en_cours,resolue',
+        ];
 
-        // غير admin اللي يقدر يختار technicien
-        'technicien_id'     => ($role === 'admin')
-            ? 'nullable|exists:users,id'
-            : 'nullable',
-    ]);
+        // admin يقدر يختار technicien
+        if ($role === 'admin') {
+            $rules['technicien_id'] = 'required|exists:users,id';
+        }
 
-    // ✅ technicien: كتولي intervention ديالو هو أوتوماتيكيا
-    if ($role !== 'admin') {
-        $data['technicien_id'] = $user->id;
-    } else {
-        // admin إلا ماختارش technicien، خليه هو
-        $data['technicien_id'] = $data['technicien_id'] ?? $user->id;
+        $data = $request->validate($rules);
+
+        // technicien: ديما هو اللي كيتسجل
+        if ($role !== 'admin') {
+            $data['technicien_id'] = $user->id;
+        }
+
+        // ✅ create intervention (statut_apres راه column موجود)
+        $intervention = Intervention::create($data);
+
+        // ✅ update statut ديال panne إذا اختار
+        if (!empty($data['statut_apres'])) {
+            Panne::where('id', $data['panne_id'])
+                ->update(['statut' => $data['statut_apres']]);
+        }
+
+        return redirect()
+            ->route('interventions.index')
+            ->with('success', 'Intervention ajoutée avec succès.');
     }
-
-    $intervention = Intervention::create($data);
-
-    if (!empty($data['statut_apres'])) {
-        Panne::where('id', $data['panne_id'])->update(['statut' => $data['statut_apres']]);
-    }
-
-    return redirect()->route('interventions.index')->with('success', 'Intervention ajoutée avec succès.');
-}
 
     public function show(Intervention $intervention)
     {
@@ -79,10 +96,15 @@ class InterventionController extends Controller
 
     public function edit(Intervention $intervention)
     {
-        $pannes = Panne::with('equipement')->latest()->get();
-        $techniciens = User::where('role', 'technicien')->orderBy('name')->get();
+        $user = auth()->user();
+        $role = $user->role ?? 'technicien';
 
-        return view('interventions.edit', compact('intervention', 'pannes', 'techniciens'));
+        $pannes = Panne::with('equipement')->latest()->get();
+        $techniciens = ($role === 'admin')
+            ? User::where('role', 'technicien')->orderBy('name')->get()
+            : collect();
+
+        return view('interventions.edit', compact('intervention', 'pannes', 'techniciens', 'role'));
     }
 
     public function update(Request $request, Intervention $intervention)
@@ -90,21 +112,21 @@ class InterventionController extends Controller
         $user = auth()->user();
         $role = $user->role ?? 'technicien';
 
-        $data = $request->validate([
+        $rules = [
             'panne_id'          => 'required|exists:pannes,id',
             'date_intervention' => 'nullable|date',
             'description'       => 'nullable|string',
             'statut_apres'      => 'nullable|in:nouvelle,en_cours,resolue',
+        ];
 
-            'technicien_id'     => ($role === 'admin')
-                ? 'nullable|exists:users,id'
-                : 'nullable',
-        ]);
+        if ($role === 'admin') {
+            $rules['technicien_id'] = 'required|exists:users,id';
+        }
+
+        $data = $request->validate($rules);
 
         if ($role !== 'admin') {
-            $data['technicien_id'] = $intervention->technicien_id ?? $user->id; // ما نخليش يبدلها
-        } else {
-            $data['technicien_id'] = $data['technicien_id'] ?? $intervention->technicien_id;
+            $data['technicien_id'] = $intervention->technicien_id ?? $user->id; // ما يبدلهاش
         }
 
         $intervention->update($data);
@@ -113,12 +135,17 @@ class InterventionController extends Controller
             $intervention->panne->update(['statut' => $data['statut_apres']]);
         }
 
-        return redirect()->route('interventions.show', $intervention->id)->with('success', 'Intervention modifiée avec succès.');
+        return redirect()
+            ->route('interventions.index')
+            ->with('success', 'Intervention modifiée avec succès.');
     }
 
     public function destroy(Intervention $intervention)
     {
         $intervention->delete();
-        return redirect()->route('interventions.index')->with('success', 'Intervention supprimée avec succès.');
+
+        return redirect()
+            ->route('interventions.index')
+            ->with('success', 'Intervention supprimée avec succès.');
     }
 }
