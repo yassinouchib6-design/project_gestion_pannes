@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Technicien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,7 +11,8 @@ class TechnicienController extends Controller
 {
     public function index()
     {
-        $techniciens = User::where('role', 'technicien')->orderBy('id', 'desc')->paginate(10);
+        // ✅ كنجيبو techniciens table باش تكون relations صحيحة
+        $techniciens = Technicien::with('user')->orderBy('id','desc')->paginate(10);
         return view('techniciens.index', compact('techniciens'));
     }
 
@@ -27,23 +29,32 @@ class TechnicienController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        User::create([
+        // 1) create user
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'role' => 'technicien',
             'password' => Hash::make($data['password']),
         ]);
 
+        // 2) ✅ create technicien automatically
+        Technicien::create([
+            'user_id' => $user->id,
+            'nom' => $data['name'],
+            'prenom' => null,
+            'contact' => null,
+        ]);
+
         return redirect()->route('techniciens.index')->with('success', 'Technicien créé avec succès.');
     }
 
-    public function destroy(User $user)
+    public function destroy(Technicien $technicien)
     {
-        if (($user->role ?? '') !== 'technicien') {
-            return redirect()->route('techniciens.index')->with('error', 'Cet utilisateur n\'est pas un technicien.');
+        // حذف user و technicien معاه
+        if ($technicien->user) {
+            $technicien->user->delete();
         }
-
-        $user->delete();
+        $technicien->delete();
 
         return redirect()->route('techniciens.index')->with('success', 'Technicien supprimé.');
     }

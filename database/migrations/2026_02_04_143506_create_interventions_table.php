@@ -11,14 +11,17 @@ return new class extends Migration {
             $table->id();
 
             $table->foreignId('panne_id')->constrained('pannes')->cascadeOnDelete();
-            $table->foreignId('technicien_id')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->date('date_intervention')->nullable();
-            $table->text('description')->nullable();
+            // ✅ technicien_id كيربط مع techniciens
+            $table->foreignId('technicien_id')->nullable()->constrained('techniciens')->nullOnDelete();
 
-            // statut to apply to panne after intervention (optional)
-            $table->enum('statut_apres', ['nouvelle','en_cours','resolue'])->nullable();
+            $table->foreignId('solution_id')->nullable()->constrained('solutions')->nullOnDelete();
 
+            $table->date('date_debut')->nullable();
+            $table->date('date_fin')->nullable();
+            $table->text('rapport_intervention')->nullable();
+
+            $table->enum('statut', ['planifiee','en_cours','terminee'])->default('planifiee');
             $table->timestamps();
         });
     }

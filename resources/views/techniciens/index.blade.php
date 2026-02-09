@@ -20,12 +20,6 @@
                 </div>
             @endif
 
-            @if(session('error'))
-                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -41,11 +35,15 @@
                         <tbody class="divide-y divide-gray-100">
                             @forelse($techniciens as $t)
                                 <tr class="hover:bg-gray-50">
-                                    <td class="py-4 px-6 font-medium text-gray-900">{{ $t->name }}</td>
-                                    <td class="px-6 text-gray-700">{{ $t->email }}</td>
+                                    <td class="py-4 px-6 font-medium text-gray-900">
+                                        {{ $t->user->name ?? $t->nom }}
+                                    </td>
+                                    <td class="px-6 text-gray-700">
+                                        {{ $t->user->email ?? '-' }}
+                                    </td>
                                     <td class="px-6">
                                         <span class="inline-flex rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                                            {{ $t->role }}
+                                            technicien
                                         </span>
                                     </td>
                                     <td class="px-6 text-right">

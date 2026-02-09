@@ -17,7 +17,8 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('techniciens.store') }}" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+            <form method="POST" action="{{ route('techniciens.store') }}"
+                  class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
                 @csrf
 
                 <div>
@@ -49,11 +50,13 @@
                 </div>
 
                 <div class="flex items-center justify-between pt-2">
-                    <a href="{{ route('techniciens.index') }}" class="text-sm font-semibold text-gray-600 hover:text-gray-900">
+                    <a href="{{ route('techniciens.index') }}"
+                       class="text-sm font-semibold text-gray-600 hover:text-gray-900">
                         ← Retour
                     </a>
 
-                    <button class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                    <button type="submit"
+                            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
                         Enregistrer
                     </button>
                 </div>

@@ -26,22 +26,22 @@ class PanneController extends Controller
 
     public function create()
     {
-        $equipements = Equipement::all();
+        $equipements = Equipement::orderBy('id', 'desc')->get();
         return view('pannes.create', compact('equipements'));
     }
 
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $user = auth()->user(); // ✅ بلا Auth
 
         $data = $request->validate([
-            'equipement_id' => 'required|exists:equipements,id',
+            'equipement_id' => 'required|integer|exists:equipements,id',
             'titre'         => 'required|string|max:255',
             'description'   => 'nullable|string',
             'date_panne'    => 'nullable|date',
             'contact'       => 'nullable|string|max:255',
             'priorite'      => 'required|in:low,medium,high',
-            'type_panne'    => 'nullable|string|max:255',
+            'type_panne'    => 'nullable|string|max:100',
         ]);
 
         $data['utilisateur_id'] = $user->id;
@@ -49,21 +49,21 @@ class PanneController extends Controller
 
         Panne::create($data);
 
-        return redirect()->route('pannes.index')->with('success', 'Panne ajoutée avec succès');
+        return redirect()->route('pannes.index')->with('success', 'Panne ajoutée avec succès.');
     }
 
     public function show(Panne $panne)
-{
-    $this->authorizePanne($panne);
+    {
+        $this->authorizePanne($panne);
 
-    $panne->load([
-        'equipement',
-        'utilisateur',
-        'interventions' // ✅ مهم
-    ]);
+        $panne->load([
+            'equipement',
+            'utilisateur',
+            'interventions'
+        ]);
 
-    return view('pannes.show', compact('panne'));
-}
+        return view('pannes.show', compact('panne'));
+    }
 
     public function edit(Panne $panne)
     {
@@ -88,7 +88,6 @@ class PanneController extends Controller
             'contact'       => 'nullable|string|max:255',
             'priorite'      => 'required|in:low,medium,high',
             'type_panne'    => 'nullable|string|max:255',
-
             'statut'        => ($role === 'utilisateur') ? 'nullable' : 'nullable|in:nouvelle,en_cours,resolue',
         ]);
 

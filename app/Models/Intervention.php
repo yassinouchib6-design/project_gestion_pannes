@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Intervention extends Model
 {
@@ -12,18 +12,21 @@ class Intervention extends Model
     protected $fillable = [
         'panne_id',
         'technicien_id',
-        'date_intervention',
-        'description',
-        'statut_apres',
+        'solution_id',
+        'date_debut',
+        'date_fin',
+        'rapport_intervention',
+        'statut',
     ];
 
     public function panne()
     {
-        return $this->belongsTo(\App\Models\Panne::class, 'panne_id');
+        return $this->belongsTo(Panne::class);
     }
 
-    public function technicien()
-    {
-        return $this->belongsTo(\App\Models\User::class, 'technicien_id');
-    }
+    // ✅ هنا خاصها Technicien ماشي User
+   public function technicien()
+{
+    return $this->belongsTo(\App\Models\Technicien::class, 'technicien_id');
+}
 }

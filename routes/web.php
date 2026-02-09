@@ -30,7 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [TechnicienController::class, 'index'])->name('index');
         Route::get('/create', [TechnicienController::class, 'create'])->name('create');
         Route::post('/', [TechnicienController::class, 'store'])->name('store');
-        Route::delete('/{user}', [TechnicienController::class, 'destroy'])->name('destroy');
+       Route::delete('/{technicien}', [TechnicienController::class, 'destroy'])->name('destroy');
     });
 
     // Profile

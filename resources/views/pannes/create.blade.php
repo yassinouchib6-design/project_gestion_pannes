@@ -41,15 +41,15 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Équipement <span class="text-red-500">*</span>
                         </label>
-                        <select name="equipement_id" required
-                                class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">-- Choisir un équipement --</option>
-                            @foreach($equipements as $e)
-                                <option value="{{ $e->id }}" @selected(old('equipement_id')==$e->id)>
-                                    {{ $e->serie_equipement ?? ('Équipement #' . $e->id) }}
-                                </option>
-                            @endforeach
-                        </select>
+                        {{-- resources/views/pannes/create.blade.php --}}
+<select name="equipement_id" class="w-full rounded-lg border-gray-300" required>
+    <option value="">-- Choisir un équipement --</option>
+    @foreach($equipements as $e)
+        <option value="{{ $e->id }}" @selected(old('equipement_id') == $e->id)>
+            {{ $e->serie_equipement }} {{-- ولا الاسم اللي عندك --}}
+        </option>
+    @endforeach
+</select>
                     </div>
 
                     {{-- Titre --}}
